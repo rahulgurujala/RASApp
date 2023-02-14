@@ -33,10 +33,10 @@ def register(user: UserRegisterSchema, session: Session = Depends(session)):
 
 
 @app.post("/login", response_model=ResponseSchema, status_code=HTTP_200_OK)
-def login(user: LogIn, session: Session = Depends(session)):
-    user = User.get(session=session, username=user.username)
+def login(login_user: LogIn, session: Session = Depends(session)):
+    user = User.get(session=session, username=login_user.username)
 
-    if not user or check_password_hash(user.password, user.password):
+    if not user or not check_password_hash(user.password, login_user.password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     token = jwt.encode({"sub": user.id}, SECRET_KEY, algorithm="HS256")
