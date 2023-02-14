@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 class CRUD:
     @classmethod
-    def add(cls, session: Session, obj: object):
+    def create(cls, session: Session, obj: object):
         session.add(obj)
         session.commit()
         return obj
@@ -14,34 +14,34 @@ class CRUD:
         return session.query(cls).get(_id)
 
     @classmethod
-    def get_all(cls, session: Session):
-        return session.query(cls).all()
+    def filter(cls, session: Session, **kwargs):
+        return session.query(cls).filter_by(**kwargs).all()
 
     @classmethod
-    def create_or_fail(cls, session: Session, **kwargs):
-        obj = cls(**kwargs)
-        session.add(obj)
-        try:
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-            return None
-        return obj
-
-    @classmethod
-    def update(cls, session: Session, _id: int, **kwargs):
-        obj = session.query(cls).get(_id)
-        if not obj:
-            return None
+    def update(cls, session: Session, obj: object, **kwargs):
         for attr, value in kwargs.items():
             setattr(obj, attr, value)
         session.commit()
         return obj
 
     @classmethod
-    def filter(cls, session: Session, **kwargs):
-        return session.query(cls).filter_by(**kwargs)
+    def join(cls, session: Session, *args):
+        return session.query(cls).join(*args)
 
     @classmethod
-    def join(cls, session: Session, join_table, join_on):
-        return session.query(cls).join(join_table, join_on)
+    def get_all(cls, session: Session):
+        return session.query(cls).all()
+
+    @classmethod
+    def get(cls, session: Session, **kwargs):
+        return session.query(cls).filter_by(**kwargs).first()
+
+    @classmethod
+    def create_or_fail(cls, session: Session, obj: object):
+        try:
+            session.add(obj)
+            session.commit()
+            return obj
+        except IntegrityError:
+            session.rollback()
+            return None

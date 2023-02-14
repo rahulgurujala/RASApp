@@ -1,12 +1,15 @@
 from configparser import ConfigParser
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 config = ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
-class Settings():
-    connection_string = config.get('mysql', 'connection_string')
+
+class Settings:
+    connection_string = config.get("mysql", "connection_string")
+    SECRET_KEY = config.get("secret", "secret_key")
 
     @classmethod
     def create_session(cls):
@@ -19,3 +22,4 @@ class Settings():
 
 
 session = Settings.create_session
+SECRET_KEY = Settings.SECRET_KEY
