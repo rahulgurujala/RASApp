@@ -1,13 +1,13 @@
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, Query
 from typing import List
+
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Query, Session
 
 
 class crud:
     """A CRUD utility class for SQLAlchemy models."""
 
-    @classmethod
-    def create(cls, session: Session, obj: object) -> object:
+    def create(self, session: Session, obj: object) -> object:
         """
         Create a new object in the database.
 
@@ -144,8 +144,7 @@ class crud:
         """
         return session.query(cls).filter_by(**kwargs).first()
 
-    @classmethod
-    def create_or_fail(cls, session: Session, obj: object) -> object:
+    def create_or_fail(self, session: Session, obj: object) -> object:
         """
         Attempt to add the given object to the database, but fail and rollback the transaction if there is a unique
         constraint violation.

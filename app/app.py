@@ -1,14 +1,16 @@
 import jwt
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from werkzeug.security import check_password_hash
 
 from auth.jwt_auth import get_current_user
-from db.models import User
+from db.models import Image, User
+from schema.image import ImageSchema
 from schema.response import ResponseSchema
-from schema.users import UserRegisterSchema, LogIn
-from settings import session, SECRET_KEY
+from schema.users import LogIn, UserRegisterSchema
+from settings import SECRET_KEY, session
+from utils.store_img import generate_presigned_url, save_image_file
 
 app = FastAPI(title="RAS")
 
@@ -43,12 +45,30 @@ def login(login_user: LogIn, session: Session = Depends(session)):
     return ResponseSchema(payload={"access_token": token})
 
 
+# TODO: Need to Refactor
 @app.get("/home", response_model=ResponseSchema, status_code=HTTP_200_OK)
 def home(session: Session = Depends(session), current_user=Depends(get_current_user)):
-    user = User.get_by(session=session, id=current_user["sub"])
-    return ResponseSchema(
-        payload={
-            "current_user": user.username,
-            "id": current_user["sub"],
-        }
+    user = User.get_by_id(session=session, _id=current_user["sub"])
+    images = []
+    for i in Image.filter_by(session=session, user_id=user.id):
+        i.image_url = generate_presigned_url(i.image_url)
+        images.append(i)
+    return ResponseSchema(payload={"images": images})
+
+
+@app.post("/uploadfile", response_model=ResponseSchema, status_code=HTTP_200_OK)
+def create_upload_file(
+    text: str = Form(...),
+    file: UploadFile = File(...),
+    session: Session = Depends(session),
+    current_user=Depends(get_current_user),
+):
+    image_path = save_image_file(file)
+    ImageSchema(user_id=current_user.get("sub"), text=text, image_path=image_path)
+    image = Image(
+        user_id=current_user.get("sub"),
+        image_url=image_path,
+        text=text,
     )
+    image = image.create(session=session, obj=image)
+    return ResponseSchema(payload={"filename": image.image_url, "image_id": image.id})

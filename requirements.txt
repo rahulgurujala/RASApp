@@ -10,3 +10,5 @@ factory-boy==3.2.1
 flake8==6.0.0
 pyjwt==2.6.0
 black==23.1.0
+python-multipart==0.0.5
+boto3==1.26.72
