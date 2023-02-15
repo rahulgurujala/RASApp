@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from werkzeug.security import check_password_hash
 
-from auth.jwt import get_current_user
+from auth.jwt_auth import get_current_user
 from db.models import User
 from schema.response import ResponseSchema
 from schema.users import UserRegisterSchema, LogIn
@@ -22,7 +22,7 @@ def test():
 def register(user: UserRegisterSchema, session: Session = Depends(session)):
     user_data = user.dict()
 
-    if User.get(session=session, username=user_data.get("username")):
+    if User.get_by(session=session, username=user_data.get("username")):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail="user already in exists"
         )
@@ -34,7 +34,7 @@ def register(user: UserRegisterSchema, session: Session = Depends(session)):
 
 @app.post("/login", response_model=ResponseSchema, status_code=HTTP_200_OK)
 def login(login_user: LogIn, session: Session = Depends(session)):
-    user = User.get(session=session, username=login_user.username)
+    user = User.get_by(session=session, username=login_user.username)
 
     if not user or not check_password_hash(user.password, login_user.password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -45,9 +45,10 @@ def login(login_user: LogIn, session: Session = Depends(session)):
 
 @app.get("/home", response_model=ResponseSchema, status_code=HTTP_200_OK)
 def home(session: Session = Depends(session), current_user=Depends(get_current_user)):
+    user = User.get_by(session=session, id=current_user["sub"])
     return ResponseSchema(
         payload={
-            "data": User.get_all(session=session),
-            "current_user": current_user,
+            "current_user": user.username,
+            "id": current_user["sub"],
         }
     )

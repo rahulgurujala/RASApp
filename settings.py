@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 config = ConfigParser()
 config.read("config.ini")
@@ -14,7 +14,7 @@ class Settings:
     @classmethod
     def create_session(cls):
         engine = create_engine(cls.connection_string)
-        Session = sessionmaker(bind=engine)
+        Session = scoped_session(sessionmaker(bind=engine))
         try:
             yield Session()
         finally:
