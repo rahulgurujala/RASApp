@@ -7,7 +7,8 @@ from sqlalchemy.orm import Query, Session
 class crud:
     """A CRUD utility class for SQLAlchemy models."""
 
-    def create(self, session: Session, obj: object) -> object:
+    @classmethod
+    def create(cls, session: Session, **kwargs: dict) -> object:
         """
         Create a new object in the database.
 
@@ -15,14 +16,15 @@ class crud:
         -----------
         session: sqlalchemy.orm.Session
             The session to use for database operations.
-        obj: object
-            The object to be created in the database.
+        **kwargs:
+            The new values to update the object with.
 
         Returns:
         --------
         object
             The created object with its primary key set.
         """
+        obj = cls(**kwargs)
         session.add(obj)
         session.commit()
         return obj

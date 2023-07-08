@@ -17,7 +17,7 @@ app = FastAPI(title="RAS")
 
 @app.get("/", response_model=ResponseSchema, status_code=HTTP_200_OK)
 def test():
-    return ResponseSchema({"message": "everything working fine"})
+    return ResponseSchema(payload={"message": "everything working fine"})
 
 
 @app.post("/register", response_model=ResponseSchema, status_code=HTTP_200_OK)
@@ -29,9 +29,10 @@ def register(user: UserRegisterSchema, session: Session = Depends(session)):
             status_code=HTTP_400_BAD_REQUEST, detail="user already in exists"
         )
 
-    user = User(**user_data)
-    user.create(session, user)
-    return ResponseSchema(payload={"message": "User created successfully"})
+    user = User.create(session, **user_data)
+    return ResponseSchema(
+        payload={"message": f"User {user.username} created successfully"}
+    )
 
 
 @app.post("/login", response_model=ResponseSchema, status_code=HTTP_200_OK)
